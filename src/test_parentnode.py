@@ -30,5 +30,13 @@ class TestParentNode(unittest.TestCase):
         with self.assertRaises(ValueError):
             node.to_html()
 
+    def test_to_html_with_no_props(self):
+        child_node = LeafNode("span", "child")
+        node = ParentNode("div", [child_node], None)
+        self.assertEqual(
+            node.to_html(),
+            "<div><span>child</span></div>",
+        )
+
 if __name__ == "__main__":
     unittest.main()
