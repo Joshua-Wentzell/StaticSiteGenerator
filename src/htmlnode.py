@@ -11,7 +11,7 @@ class HTMLNode:
     def to_html(self):
         raise NotImplementedError()
 
-    def props_to_html(self):
+    def props_to_html(self) -> str:
         props_str: str = ""
         for key, value in self.props.items():
             props_str += f'{str(key)}="{str(value)}" '
