@@ -45,6 +45,28 @@ class TestUtil(unittest.TestCase):
         self.assertIn("alt", html_node.props.keys(), "Alt not in props")
         self.assertEqual(html_node.props["alt"], "This is an image node")
 
+    def test_node_splitting_1(self):
+        node_list = [TextNode("This is text with a `code block` word", TextType.TEXT)]
+        expected_result = [
+                           TextNode("This is text with a ", TextType.TEXT),
+                           TextNode("code block", TextType.CODE),
+                           TextNode(" word", TextType.TEXT)
+                           ]
+        split_nodes = split_nodes_delimiter(node_list, "`", TextType.CODE)
+        self.assertEqual(split_nodes, expected_result) 
+
+    def test_node_splitting_2(self):
+        node_list = [TextNode("This is text with a `code block` word and another `code crab` test", TextType.TEXT)]
+        expected_result = [
+                           TextNode("This is text with a ", TextType.TEXT),
+                           TextNode("code block", TextType.CODE),
+                           TextNode(" word and another ", TextType.TEXT),
+                           TextNode("code crab", TextType.CODE),
+                           TextNode(" test", TextType.TEXT)
+                           ]
+        split_nodes = split_nodes_delimiter(node_list, "`", TextType.CODE)
+        self.assertEqual(split_nodes, expected_result) 
+
 
 if __name__ == "__main__":
     unittest.main()
