@@ -67,6 +67,11 @@ class TestUtil(unittest.TestCase):
         split_nodes = split_nodes_delimiter(node_list, "`", TextType.CODE)
         self.assertEqual(split_nodes, expected_result) 
 
+    def test_extract_markdown_images_1(self):
+        input_text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        expected_result = [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
+        actual_result = extract_markdown_images(input_text)
+        self.assertEqual(expected_result, actual_result)
 
 if __name__ == "__main__":
     unittest.main()
