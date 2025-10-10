@@ -204,7 +204,7 @@ class TestUtil(unittest.TestCase):
             TextNode("link", TextType.LINK, "https://site.com")
         ]
         self.assertListEqual(result, expected)
-        
+
     def test_markdown_to_blocks(self):
         md = """
 This is **bolded** paragraph
@@ -225,5 +225,58 @@ This is the same paragraph on a new line
             ],
         )
 
+    def test_markdown_to_blocks_basic(self):
+        md = "Block 1\n\nBlock 2"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Block 1", "Block 2"])
+
+    def test_markdown_to_blocks_with_whitespace(self):
+        md = "  Block 1  \n\n  Block 2  "
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Block 1", "Block 2"])
+
+    def test_markdown_to_blocks_single_block(self):
+        md = "Just one block"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Just one block"])
+
+    def test_markdown_to_blocks_multiline_in_block(self):
+        md = "Block 1\nLine 2 of block 1\n\nBlock 2"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Block 1\nLine 2 of block 1", "Block 2"])
+
+    def test_markdown_to_blocks_empty_blocks(self):
+        md = "Block 1\n\n\n\nBlock 2"
+        blocks = markdown_to_blocks(md)
+        # Should skip completely empty blocks
+        self.assertEqual(blocks, ["Block 1", "Block 2"])
+
+    def test_markdown_to_blocks_leading_trailing_newlines(self):
+        md = "\n\nBlock 1\n\nBlock 2\n\n"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["Block 1", "Block 2"])
+
+    def test_markdown_to_blocks_three_blocks(self):
+        md = "First\n\nSecond\n\nThird"
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, ["First", "Second", "Third"])
+
+    def test_markdown_to_blocks_complex(self):
+        md = """# Heading
+
+Paragraph with multiple
+lines of text
+
+- List item 1
+- List item 2
+
+Another paragraph"""
+        blocks = markdown_to_blocks(md)
+        self.assertEqual(blocks, [
+            "# Heading",
+            "Paragraph with multiple\nlines of text",
+            "- List item 1\n- List item 2",
+            "Another paragraph"
+        ])
 if __name__ == "__main__":
     unittest.main()
