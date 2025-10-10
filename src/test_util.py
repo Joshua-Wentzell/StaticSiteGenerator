@@ -73,5 +73,13 @@ class TestUtil(unittest.TestCase):
         actual_result = extract_markdown_images(input_text)
         self.assertEqual(expected_result, actual_result)
 
+    def test_extract_markdown_link_1(self):
+        input_text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+        expected_result = [("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")]
+        actual_result = extract_markdown_links(input_text)
+        self.assertEqual(expected_result, actual_result)
+
+
+
 if __name__ == "__main__":
     unittest.main()
