@@ -278,5 +278,85 @@ Another paragraph"""
             "- List item 1\n- List item 2",
             "Another paragraph"
         ])
+
+    def test_block_to_block_type_heading_h1(self):
+        block = "# Heading 1"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.HEADING)
+
+    def test_block_to_block_type_heading_h2(self):
+        block = "## Heading 2"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.HEADING)
+
+    def test_block_to_block_type_heading_h6(self):
+        block = "###### Heading 6"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.HEADING)
+
+    def test_block_to_block_type_code_block(self):
+        block = "```python\nprint('hello')\n```"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.CODE)
+
+    def test_block_to_block_type_code_block_no_language(self):
+        block = "```\nsome code\n```"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.CODE)
+
+    def test_block_to_block_type_quote_single_line(self):
+        block = "> This is a quote"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.QUOTE)
+
+    def test_block_to_block_type_quote_multiline(self):
+        block = "> This is a quote\n> with multiple lines"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.QUOTE)
+
+    def test_block_to_block_type_unordered_list_dash(self):
+        block = "- Item 1\n- Item 2\n- Item 3"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.UNORDERED_LIST)
+
+    def test_block_to_block_type_unordered_list_single_item(self):
+        block = "- Single item"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.UNORDERED_LIST)
+
+    def test_block_to_block_type_ordered_list(self):
+        block = "1. First item\n2. Second item\n3. Third item"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.ORDERED_LIST)
+
+    def test_block_to_block_type_ordered_list_single_item(self):
+        block = "1. Single item"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.ORDERED_LIST)
+
+    def test_block_to_block_type_paragraph_plain_text(self):
+        block = "This is just a regular paragraph with no special formatting."
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+    def test_block_to_block_type_paragraph_multiline(self):
+        block = "This is a paragraph\nwith multiple lines\nbut no special formatting"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+    def test_block_to_block_type_paragraph_with_hash_not_at_start(self):
+        block = "This has a # in the middle"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+    def test_block_to_block_type_paragraph_starts_with_number_no_period(self):
+        block = "1 This is not an ordered list"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
+
+    def test_block_to_block_type_paragraph_dash_no_space(self):
+        block = "-No space after dash"
+        result = block_to_block_type(block)
+        self.assertEqual(result, BlockType.PARAGRAPH)
 if __name__ == "__main__":
     unittest.main()
