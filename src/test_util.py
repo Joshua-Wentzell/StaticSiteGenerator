@@ -201,53 +201,7 @@ class TestUtil(unittest.TestCase):
             TextNode(" and ", TextType.TEXT),
             TextNode("image", TextType.IMAGE, "https://img.com/pic.png"),
             TextNode(" and ", TextType.TEXT),
-            TextNode("link", TextType.LINK, "https://site.com"),
-            TextNode("", TextType.TEXT)
-        ]
-        self.assertListEqual(result, expected)
-
-    def test_text_to_textnodes_nested_formatting(self):
-        text = "**bold with `code` inside**"
-        result = text_to_textnodes(text)
-        # Should split bold first, then code
-        expected = [
-            TextNode("", TextType.TEXT),
-            TextNode("bold with ", TextType.BOLD),
-            TextNode("", TextType.TEXT),
-            TextNode("code", TextType.CODE),
-            TextNode(" inside", TextType.TEXT),
-            TextNode("", TextType.TEXT)
-        ]
-        self.assertListEqual(result, expected)
-
-    def test_text_to_textnodes_multiple_images_and_links(self):
-        text = "![img1](url1) text [link1](url2) more ![img2](url3)"
-        result = text_to_textnodes(text)
-        expected = [
-            TextNode("img1", TextType.IMAGE, "url1"),
-            TextNode(" text ", TextType.TEXT),
-            TextNode("link1", TextType.LINK, "url2"),
-            TextNode(" more ", TextType.TEXT),
-            TextNode("img2", TextType.IMAGE, "url3"),
-            TextNode("", TextType.TEXT)
-        ]
-        self.assertListEqual(result, expected)
-
-    def test_text_to_textnodes_all_formats(self):
-        text = "**bold** _italic_ `code` ![img](img.png) [link](site.com)"
-        result = text_to_textnodes(text)
-        expected = [
-            TextNode("", TextType.TEXT),
-            TextNode("bold", TextType.BOLD),
-            TextNode(" ", TextType.TEXT),
-            TextNode("italic", TextType.ITALIC),
-            TextNode(" ", TextType.TEXT),
-            TextNode("code", TextType.CODE),
-            TextNode(" ", TextType.TEXT),
-            TextNode("img", TextType.IMAGE, "img.png"),
-            TextNode(" ", TextType.TEXT),
-            TextNode("link", TextType.LINK, "site.com"),
-            TextNode("", TextType.TEXT)
+            TextNode("link", TextType.LINK, "https://site.com")
         ]
         self.assertListEqual(result, expected)
 

@@ -57,7 +57,7 @@ def extract_markdown_images(text):
     return matches
 
 def extract_markdown_links(text):
-    matches = re.findall(r"\[(.*?)\]\((.*?)\)", text)
+    matches = re.findall(r"\s\[(.*?)\]\((.*?)\)", text)
     return matches
 
 def split_nodes_image(old_nodes):
@@ -67,9 +67,7 @@ def split_nodes_image(old_nodes):
             new_nodes.append(node)
             continue
 
-        trimmed_text = node.text.strip()
-
-        matches = list(re.finditer(r"!\[(.*?)\]\((.*?)\)", trimmed_text))
+        matches = list(re.finditer(r"!\[(.*?)\]\((.*?)\)", node.text))
         if len(matches) == 0:
             new_nodes.append(node)
             continue
@@ -78,8 +76,8 @@ def split_nodes_image(old_nodes):
         for match in matches:
             # Add text before the image
             if match.start() > last_end:
-                text_before = trimmed_text[last_end:match.start()]
-                if text_before:
+                text_before = node.text[last_end:match.start()]
+                if text_before and text_before.strip() != "":
                     new_nodes.append(TextNode(text_before, TextType.TEXT))
             
             # Add the image node
@@ -90,9 +88,9 @@ def split_nodes_image(old_nodes):
             last_end = match.end()
         
         # Add remaining text after last image
-        if last_end < len(trimmed_text):
-            text_after = trimmed_text[last_end:]
-            if text_after:
+        if last_end < len(node.text):
+            text_after = node.text[last_end:]
+            if text_after and text_after.strip() != "":
                 new_nodes.append(TextNode(text_after, TextType.TEXT))
     
     return new_nodes
@@ -104,9 +102,7 @@ def split_nodes_link(old_nodes):
             new_nodes.append(node)
             continue
 
-        trimmed_text = node.text.strip()
-
-        matches = list(re.finditer(r"\[(.*?)\]\((.*?)\)", trimmed_text))
+        matches = list(re.finditer(r"\s\[(.*?)\]\((.*?)\)", node.text))
         if len(matches) == 0:
             new_nodes.append(node)
             continue
@@ -115,31 +111,31 @@ def split_nodes_link(old_nodes):
         for match in matches:
             # Add text before the image
             if match.start() > last_end:
-                text_before = trimmed_text[last_end:match.start()]
-                if text_before:
+                text_before = node.text[last_end:match.start() + 1]
+                if text_before and text_before.strip() != "":
                     new_nodes.append(TextNode(text_before, TextType.TEXT))
             
             # Add the image node
             alt_text = match.group(1)
             url = match.group(2)
-            new_nodes.append(TextNode(alt_text, TextType.IMAGE, url))
+            new_nodes.append(TextNode(alt_text, TextType.LINK, url))
             
             last_end = match.end()
         
         # Add remaining text after last image
-        if last_end < len(trimmed_text):
-            text_after = trimmed_text[last_end:]
-            if text_after:
+        if last_end < len(node.text):
+            text_after = node.text[last_end:]
+            if text_after and text_after.strip() != "":
                 new_nodes.append(TextNode(text_after, TextType.TEXT))
     
     return new_nodes
 
 def text_to_textnodes(text):
-    textNode = TextNode(text, TextType.TEXT)
-    nodes = [textNode]
-    nodes_split_1 = split_nodes_image(nodes)
-    nodes_split_2 = split_nodes_delimiter(nodes_split_1, "**", TextType.BOLD)
-    nodes_split_2 = split_nodes_delimiter(nodes_split_2, "_", TextType.ITALIC)
-    nodes_split_2 = split_nodes_delimiter(nodes_split_2, "`", TextType.CODE)
-    nodes_split_2 = split_nodes_link(nodes_split_2)
-    return nodes_split_2
+    text_node = TextNode(text, TextType.TEXT)
+    nodes = [text_node]
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    return nodes
