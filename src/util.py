@@ -1,4 +1,5 @@
 import re
+from htmlnode import HTMLNode
 from leafnode import LeafNode
 from textnode import TextNode, TextType
 from enum import Enum
@@ -91,7 +92,7 @@ def extract_markdown_images(text):
     return matches
 
 def extract_markdown_links(text):
-    matches = re.findall(r"\s\[(.*?)\]\((.*?)\)", text)
+    matches = re.findall(r"(?<!\!)\[(.*?)\]\((.*?)\)", text)
     return matches
 
 def split_nodes_image(old_nodes):
@@ -111,7 +112,8 @@ def split_nodes_image(old_nodes):
             # Add text before the image
             if match.start() > last_end:
                 text_before = node.text[last_end:match.start()]
-                if text_before and text_before.strip() != "":
+                # Only add if not just whitespace
+                if text_before.strip():
                     new_nodes.append(TextNode(text_before, TextType.TEXT))
             
             # Add the image node
@@ -124,7 +126,8 @@ def split_nodes_image(old_nodes):
         # Add remaining text after last image
         if last_end < len(node.text):
             text_after = node.text[last_end:]
-            if text_after and text_after.strip() != "":
+            # Only add if not just whitespace
+            if text_after.strip():
                 new_nodes.append(TextNode(text_after, TextType.TEXT))
     
     return new_nodes
@@ -136,30 +139,30 @@ def split_nodes_link(old_nodes):
             new_nodes.append(node)
             continue
 
-        matches = list(re.finditer(r"\s\[(.*?)\]\((.*?)\)", node.text))
+        matches = list(re.finditer(r"(?<!\!)\[(.*?)\]\((.*?)\)", node.text))
         if len(matches) == 0:
             new_nodes.append(node)
             continue
         
         last_end = 0
         for match in matches:
-            # Add text before the image
+            # Add text before the link
             if match.start() > last_end:
-                text_before = node.text[last_end:match.start() + 1]
-                if text_before and text_before.strip() != "":
+                text_before = node.text[last_end:match.start()]
+                if text_before:
                     new_nodes.append(TextNode(text_before, TextType.TEXT))
             
-            # Add the image node
+            # Add the link node
             alt_text = match.group(1)
             url = match.group(2)
             new_nodes.append(TextNode(alt_text, TextType.LINK, url))
             
             last_end = match.end()
         
-        # Add remaining text after last image
+        # Add remaining text after last link
         if last_end < len(node.text):
             text_after = node.text[last_end:]
-            if text_after and text_after.strip() != "":
+            if text_after:
                 new_nodes.append(TextNode(text_after, TextType.TEXT))
     
     return new_nodes
@@ -177,8 +180,151 @@ def text_to_textnodes(text):
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
     final_blocks = []
-    for i in range(0, len(blocks)):
-        if blocks[i].strip() == "":
-            continue
-        final_blocks.append(blocks[i].strip())
+    for block in blocks:
+        stripped = block.strip()
+        if stripped:
+            final_blocks.append(stripped)
     return final_blocks
+
+def text_to_children(text):
+    # Replace newlines with spaces for inline rendering
+    text = text.replace('\n', ' ')
+    text_nodes = text_to_textnodes(text)
+    children = []
+    for text_node in text_nodes:
+        html_node = text_node_to_html_node(text_node)
+        children.append(html_node)
+    return children
+
+def heading_to_html_node(block):
+    # Count the number of # at the start
+    level = 0
+    for char in block:
+        if char == '#':
+            level += 1
+        else:
+            break
+    
+    if level < 1 or level > 6:
+        raise Exception(f"Invalid heading level: {level}")
+    
+    # Extract text after the hashes and space
+    text = block[level:].strip()
+    children = text_to_children(text)
+    
+    return HTMLNode(f"h{level}", None, children)
+
+def quote_to_html_node(block):
+    lines = block.split('\n')
+    # Remove > from each line
+    cleaned_lines = []
+    for line in lines:
+        if line.startswith('>'):
+            cleaned_lines.append(line[1:].strip())
+        else:
+            cleaned_lines.append(line)
+    
+    # Join lines back together
+    content = '\n'.join(cleaned_lines)
+    children = text_to_children(content)
+    
+    return HTMLNode("blockquote", None, children)
+
+def unordered_list_to_html_node(block):
+    lines = block.split('\n')
+    list_items = []
+    
+    for line in lines:
+        # Remove the list marker (- or *)
+        if line.startswith('- '):
+            text = line[2:]
+        elif line.startswith('* '):
+            text = line[2:]
+        else:
+            text = line
+        
+        # Create list item with inline children
+        children = text_to_children(text)
+        list_items.append(HTMLNode("li", None, children))
+    
+    return HTMLNode("ul", None, list_items)
+
+def ordered_list_to_html_node(block):
+    lines = block.split('\n')
+    list_items = []
+    
+    for line in lines:
+        # Remove the number and period (e.g., "1. ")
+        match = re.match(r'^\d+\.\s', line)
+        if match:
+            text = line[match.end():]
+        else:
+            text = line
+        
+        # Create list item with inline children
+        children = text_to_children(text)
+        list_items.append(HTMLNode("li", None, children))
+    
+    return HTMLNode("ol", None, list_items)
+
+def code_to_html_node(block):
+    # Remove ``` from start and end
+    if not (block.startswith('```') and block.endswith('```')):
+        code_content = block
+    else:
+        # Remove the backticks
+        code_content = block[3:-3]
+        
+        # If content starts with newline, it might have a language identifier
+        # Check if the first line (before first \n) is just a word (language name)
+        if code_content.startswith('\n'):
+            # No language identifier, just remove leading newline
+            code_content = code_content[1:]
+        else:
+            # Check if first line is a language identifier
+            first_newline = code_content.find('\n')
+            if first_newline != -1:
+                first_line = code_content[:first_newline]
+                # If first line has no spaces and is alphanumeric, it's likely a language
+                if first_line.strip() and ' ' not in first_line.strip() and first_line.strip().isalnum():
+                    # Skip the language identifier line
+                    code_content = code_content[first_newline + 1:]
+    
+    # Create code node as a leaf node (preserve exact formatting)
+    code_node = LeafNode("code", code_content)
+    # Wrap in pre tag
+    return HTMLNode("pre", None, [code_node])
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    children = []
+    
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        
+        match block_type:
+            case BlockType.PARAGRAPH:
+                child_nodes = text_to_children(block)
+                children.append(HTMLNode("p", None, child_nodes))
+                
+            case BlockType.HEADING:
+                heading_node = heading_to_html_node(block)
+                children.append(heading_node)
+                
+            case BlockType.CODE:
+                code_node = code_to_html_node(block)
+                children.append(code_node)
+                
+            case BlockType.QUOTE:
+                quote_node = quote_to_html_node(block)
+                children.append(quote_node)
+                
+            case BlockType.UNORDERED_LIST:
+                list_node = unordered_list_to_html_node(block)
+                children.append(list_node)
+                
+            case BlockType.ORDERED_LIST:
+                list_node = ordered_list_to_html_node(block)
+                children.append(list_node)
+    
+    return HTMLNode("div", None, children)
