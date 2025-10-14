@@ -1,5 +1,5 @@
 import os
-from util import copy_static_to_public, generate_page
+from util import copy_static_to_public, generate_pages_recursive
 
 
 def main():
@@ -10,14 +10,13 @@ def main():
     # Define paths
     static_dir = os.path.join(project_root, 'static')
     public_dir = os.path.join(project_root, 'public')
-    content_path = os.path.join(project_root, 'content', 'index.md')
+    content_dir = os.path.join(project_root, 'content')
     template_path = os.path.join(project_root, 'template.html')
-    dest_path = os.path.join(public_dir, 'index.html')
     
     # Delete everything in public directory and copy static files
     copy_static_to_public(static_dir, public_dir)
     
-    # Generate index.html from markdown
-    generate_page(content_path, template_path, dest_path)
+    # Generate all HTML pages from markdown files recursively
+    generate_pages_recursive(content_dir, template_path, public_dir)
 
 main()
