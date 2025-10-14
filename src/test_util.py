@@ -389,5 +389,65 @@ the **same** even with inline stuff
             html,
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
+
+    def test_extract_title_basic(self):
+        md = "# Hello"
+        result = extract_title(md)
+        self.assertEqual(result, "Hello")
+
+    def test_extract_title_with_extra_whitespace(self):
+        md = "#   Hello World   "
+        result = extract_title(md)
+        self.assertEqual(result, "Hello World")
+
+    def test_extract_title_multiline(self):
+        md = """# My Title
+
+Some paragraph text here.
+
+## Not this heading"""
+        result = extract_title(md)
+        self.assertEqual(result, "My Title")
+
+    def test_extract_title_with_content_after(self):
+        md = """# Main Title
+
+This is a paragraph.
+
+## Subheading
+
+More content."""
+        result = extract_title(md)
+        self.assertEqual(result, "Main Title")
+
+    def test_extract_title_not_first_line(self):
+        md = """Some intro text
+
+# The Real Title
+
+More content"""
+        result = extract_title(md)
+        self.assertEqual(result, "The Real Title")
+
+    def test_extract_title_no_h1_raises_exception(self):
+        md = """## This is an h2
+
+### This is an h3
+
+Regular paragraph text."""
+        with self.assertRaises(Exception) as context:
+            extract_title(md)
+        self.assertIn("No h1 header found", str(context.exception))
+
+    def test_extract_title_empty_string_raises_exception(self):
+        md = ""
+        with self.assertRaises(Exception):
+            extract_title(md)
+
+    def test_extract_title_only_h2_raises_exception(self):
+        md = "## Not an h1"
+        with self.assertRaises(Exception):
+            extract_title(md)
+
 if __name__ == "__main__":
     unittest.main()
