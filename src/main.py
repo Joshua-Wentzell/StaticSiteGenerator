@@ -13,14 +13,14 @@ def main():
     
     # Define paths
     static_dir = os.path.join(project_root, 'static')
-    public_dir = os.path.join(project_root, 'public')
+    docs_dir = os.path.join(project_root, 'docs')
     content_dir = os.path.join(project_root, 'content')
     template_path = os.path.join(project_root, 'template.html')
     
-    # Delete everything in public directory and copy static files
-    copy_static_to_public(static_dir, public_dir)
+    # Delete everything in docs directory and copy static files
+    copy_static_to_public(static_dir, docs_dir)
     
     # Generate all HTML pages from markdown files recursively
-    generate_pages_recursive(content_dir, template_path, public_dir, basepath)
+    generate_pages_recursive(content_dir, template_path, docs_dir, basepath)
 
 main()
